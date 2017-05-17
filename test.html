@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js" type="text/javascript"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" type="text/javascript" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
+    <title>FourierTransforms</title>
+    <script src="js/dfttest.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="css/katex.css">
+    <script src="js/katex_render.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container">
+        <div class="navbar-header"><a class="navbar-brand">FourierTransforms</a></div>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <div class="page-header">
+                <h1>Fourier Transforms</h1>
+              </div>
+<article>
+<h1 class="article_title">DFT(Discrete Fourier Transform)</h1>
+<p>連続の二次元フーリエ変換は<katex>F(u,v)=\displaystyle{\int_{-\infty}^{\infty}\int_{-\infty}^{\infty}{f(x,y)e^{-j2\pi(ux+vy)}dxdy}}</katex>と定義されている。
+離散では<katex>F(u,v)=\displaystyle{\sum_{x=0}^{M-1} \sum_{y=0}^{N-1} {f(x,y) \exp\left(-j 2\pi\left(\frac{ux}{M}+\frac{vy}{N}\right)\right)}}</katex>という式になる。
+画像の横幅が<katex>M</katex>、縦が<katex>N</katex>の画像である。行列で表すと<katex>N\times M</katex>行列となる。
+この式を変形すると、</p>
+<p><katex class="katex_block">
+\begin{aligned}
+F(u,v)
+&= \frac{1}{N}
+\displaystyle{
+\sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) \exp\left(-j \frac{2\pi}{N} (ux+vy)\right)}
+}\\
+        &= \frac{1}{N}
+\displaystyle{
+\sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} (ux+vy)}}
+}\\
+        &= \frac{1}{N}
+\displaystyle{
+\sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux} e^{-j \frac{2\pi}{N} vy}}
+}\\
+        &= \frac{1}{N}
+\displaystyle{
+\sum_{y=0}^{N-1} e^{-j \frac{2\pi}{N} vy} \sum_{x=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux}}
+}\\
+        \Biggl( &= \frac{1}{N}
+\displaystyle{
+\sum_{x=0}^{N-1} e^{-j \frac{2\pi}{N} ux} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} vy}}
+} \Biggr)
+\end{aligned}
+</katex></p>
+<p>このようになる。
+したがって、各行毎にフーリエ変換して、各列毎にフーリエ変換をするという手順によって二次元フーリエ変換を実装することができる。</p>
+<p><katex class="katex_block">
+\begin{aligned}
+F(u,v)
+&= \frac{1}{N}
+\displaystyle{
+\sum_{y=0}^{N-1} e^{-j \frac{2\pi}{N} vy} \sum_{x=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux}}
+} \\
+        &= \frac{1}{N}
+\displaystyle{
+\sum_{y=0}^{N-1} \left(
+\cos\left(\frac{2\pi}{N}yv\right)-j\sin\left(\frac{2\pi}{N}yv\right)
+\right)
+\sum_{x=0}^{N-1} f(x,y) \left(
+\cos\left(\frac{2\pi}{N}xu\right)-j\sin\left(\frac{2\pi}{N}xu\right)
+\right)
+}
+\end{aligned}
+</katex></p>
+<p>x-&gt;,M<br>
+y<br>
+|<br>
+v<br>
+,<br>
+N</p>
+<p><katex class="katex_block">
+\begin{aligned}
+G(a,b)
+&= \displaystyle{
+\sum_{x=0}^{N-1} f(x,b) \left(
+\cos\left(\frac{2\pi}{N}xa\right)-j\sin\left(\frac{2\pi}{N}xa\right)
+\right)
+}
+\end{aligned}
+</katex></p>
+<p><katex class="katex_block">
+\begin{aligned}
+F(u,v)
+&= \displaystyle{
+\sum_{b=0}^{N-1} G(u,b) \left(
+\cos\left(\frac{2\pi}{N}xa\right)-j\sin\left(\frac{2\pi}{N}xa\right)
+\right)
+}
+\end{aligned}
+</katex></p>
+<h2 class="article_title">2次元離散フーリエ変換</h2>
+<p>画像を行列によって以下のように定義する。</p>
+<p><katex class="katex_block">
+\mathbb{F} =
+\begin{pmatrix}
+f(0,0) & f(1,0) & \cdots & f(M-1,0) \\
+        f(0,1) & f(1,1) & \cdots & f(M-1,1) \\
+        \vdots & \vdots & \ddots & \vdots \\
+        f(0,N-1) & f(1,N-1) & \cdots & f(M-1,N-1)
+\end{pmatrix}
+</katex></p>
+</article>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <h2>ファイル入力</h2>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                  <div class="panel panel-dafault">
+                    <div class="panel-body">
+                      <button class="btn btn-default" id="inputButton" type="button">ファイルを選択</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <h2>読み込んだファイル</h2>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" id="outArea"></div>
+              </div>
+              <h2>パワースペクトル画像</h2>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted text-center">designed by YusukeHoriuchi<br>github :&nbsp;<a href="https://github.com/YusukeHoriuchi/">YusukeHoriuchi</a><br>twitter :&nbsp;<a href="https://teitter.com/">yuyu</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

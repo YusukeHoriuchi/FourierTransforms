@@ -1,0 +1,25 @@
+.katex_block{
+  margin-left : 35px;
+}
+h1,h2,h3,h4,h5,h6,h7{
+  padding-top    : 10px;
+  padding-bottom : 10px;
+}
+h1.article_title{
+  border-style  : solid;
+  border-right   : 9px;
+  border-top : 3px;
+  border-color  : #555555;
+}
+h2.article_title{
+  border-style  : solid;
+  border-right   : 3px;
+  border-top : 2px;
+  border-color  : #555555;
+}
+h3.article_title{
+  border-style  : solid;
+  border-right   : 1px;
+  border-top : 1px;
+  border-color  : #990000;
+}

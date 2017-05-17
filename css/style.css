@@ -1,0 +1,40 @@
+/*-------------------- Sticky footer styles --------------------*/
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  margin-bottom: 140px;             /* 記事部分の下に余白 footerの高さに応じて作る */
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 120px;                    /* footer部分の高さ */
+  background-color: #1b1b1b;        /* footer部分の背景色 */
+}
+
+/*-------------------- Custom page CSS　--------------------*/
+body{
+  background-color : #EEEEEE;       /* 背景色 */
+}
+.row{
+  background-color : #F9F9F5;       /* 記事部分背景色 */
+}
+
+.container {
+  width: auto;
+  max-width: 980px;                 /* 記事部分の幅 */
+  padding: 0 15px;
+}
+.container .text-muted {
+  margin: 20px 0;
+}
+
+
+/*-------------------- Custom Image --------------------*/
+.responsiveImg {
+    display : block;
+    width : 100%;
+    height : auto;
+}
