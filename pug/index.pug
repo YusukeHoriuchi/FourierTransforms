@@ -1,0 +1,47 @@
+doctype html
+html(lang="ja")
+  head
+    meta(charset = "utf-8")
+    //-
+      include _inc_bootstrap.pug
+      include _inc_katex.pug
+    include _inc_offline_bootstrap.pug
+    include _inc_offline_katex.pug
+    title FourierTransforms
+    //-
+      script(  src = "js/script.js"
+              type = "text/javascript")
+    include _katex.pug
+    include _style.pug
+
+  body
+    nav.navbar.navbar-inverse
+      div.container
+        div.navbar-header
+          a.navbar-brand FourierTransforms
+    div.container
+      div.row
+        div.col-xs-12.col-sm-12.col-md-12.col-lg-12
+          //-----説明-----
+          div.row
+            div.col-xs-12.col-sm-12.col-md-12.col-lg-12
+              div.page-header
+                h1 Fourier Transforms
+              p Here is paragraph zone
+              include:pre_katex:markdown-it:post_katex ../doc/deep-learning.md
+
+          //-----add row
+          div.row
+            div.col-xs-12.col-sm-12.col-md-12.col-lg-12
+
+
+    footer.footer
+      div.container
+        p.text-muted.text-center
+          | designed by YusukeHoriuchi
+          br
+          | github :&nbsp;
+          a(href="https://github.com/YusukeHoriuchi/") YusukeHoriuchi
+          br
+          | twitter :&nbsp;
+          a(href="https://teitter.com/") yuyu
