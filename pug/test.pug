@@ -37,7 +37,8 @@ html(lang="ja")
           //-- 出力
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
-              h2 出力
+              h2#output
+              div#test
               div.row
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#origin
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#gray
@@ -50,6 +51,33 @@ html(lang="ja")
               div.row
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#power
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#cross
+          //-- モーダルウィンドウ
+          div.row
+            div.col-xs-12.col-sm-12.col-md-12.col-lg-12
+              div.modal#wait(   tab-index   = "-1"
+                                role        = "dialog"
+                                data-backdrop = "static")
+                div.modal-dialog(role = "document")
+                  div.modal-content
+                    div.modal-header
+                      //- 左上xボタン
+                      button.close#close(type="button")
+                        span &times;
+                      //- タイトル
+                      h4.modal-title.text-center 処理中
+                    div.modal-body
+                      //- 中身
+                      div.text-center#progress
+                      button.hidden#closeModal(data-dismiss="modal")
+                    div.modal-footer
+                      //- キャンセルボタン
+                      button.btn.btn-danger#cancel(type="button") cancel
+          //-- 非表示エレメント
+          div
+            button.hidden#showModal(data-toggle="modal"
+                                    data-target="#wait")
+            input.hidden#input( type="file"
+                                accept="image/*")
 
     footer.footer
       div.container

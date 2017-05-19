@@ -15,6 +15,28 @@
 パワースペクトル描画
 モーダル消去
 
+
+開始
+  モーダル表示
+  {
+  progress更新
+  CancelFlag == true
+    -> progress : 中止処理中
+    -> CancelFlag : false
+    -> モーダル非表示
+  }
+  close == true
+    -> progress : 中止処理中
+    -> CancelFlag : true
+  終了
+    -> EndFlag : true
+    -> progress : 終了
+    -> cancel : 非表示
+    -> 1秒後 : モーダル非表示
+    close == true
+
+
+
 再構成エリア作成
 
 知見　：
@@ -26,17 +48,11 @@
 window.addEventListener('load',()=>{
     console.log("window onload");
 
-    const inputButton = document.getElementById("inputButton");
+    let CancelFlag = false;
+    let EndFlag = false;
+    let TimeCount;
 
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-
-    //--- debug
-    console.dir(inputButton);
-    //console.dir(outArea);
-    console.dir(input);
-
+    const input = document.getElementById("input");
     input.addEventListener("change",(evt)=>{                              // 入力が変更されたら
         console.log(evt);
         console.dir(evt.target);
@@ -46,10 +62,39 @@ window.addEventListener('load',()=>{
             return;
         }
 
+        (()=>{
+            const output = document.getElementById("output");
+            output.innerHTML = "出力";
+            const origin = document.getElementById("origin");
+            origin.innerHTML = "";
+            const gray   = document.getElementById("gray");
+            gray.innerHTML = "";
+            const rowRe  = document.getElementById("rowRe");
+            rowRe.innerHTML = "";
+            const rowIm  = document.getElementById("rowIm");
+            rowIm.innerHTML = "";
+            const colRe  = document.getElementById("colRe");
+            colRe.innerHTML = "";
+            const colIm  = document.getElementById("colIm");
+            colIm.innerHTML = "";
+            const power  = document.getElementById("power");
+            power.innerHTML = "";
+            const cross  = document.getElementById("cross");
+            cross.innerHTML = "";
+        })();
+
         Promise.resolve(
             evt.target.files[0]
-        ).then((file) => {  return new Promise(                                 // 入力先頭ファイルの読み込み
+        ).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
+                showModal.click();
+                TimeCount = Date.now();
+                progress.innerHTML = "ファイルが入力されました";
+                setTimeout(()=>{resolve(input);},500);
+            }
+        );}).then((file) => {  return new Promise(                                 // 入力先頭ファイルの読み込み
+            (resolve,reject)=>{
+                if(CancelFlag===true)reject();
                 const reader = new FileReader();
                 reader.onload = function(){
                     console.log("file readed. read result is");
@@ -60,8 +105,15 @@ window.addEventListener('load',()=>{
                 }
                 reader.readAsDataURL(file);
             }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                TimeCount = Date.now();
+                progress.innerHTML = "ファイルの読み込みに成功";
+                setTimeout(()=>{resolve(input);},500);
+            }
         );}).then((data) => {   return new Promise(                             // 画像読み込み
             (resolve,reject) => {
+                if(CancelFlag===true)reject();
                 console.log("now reading data");
                 const img = new Image();
                 img.onload = ()=>{
@@ -78,6 +130,12 @@ window.addEventListener('load',()=>{
                     reject("image load error");
                 };
                 img.src = data;
+            }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                TimeCount = Date.now();
+                progress.innerHTML = "画像の読み込みに成功";
+                setTimeout(()=>{resolve(input);},500);
             }
         );}).then((imgdata)=>{return new Promise(                               // ! 画像表示
             (resolve,reject)=>{
@@ -98,6 +156,7 @@ window.addEventListener('load',()=>{
             }
         );}).then((imgData) => {  return new Promise(                           // 画像処理(白黒化)
             (resolve,reject) => {
+                if(CancelFlag===true)reject();
                 if(false){
                     resolve(imgData);                                           // カラーの場合そのまま流す
                 }else{
@@ -111,6 +170,12 @@ window.addEventListener('load',()=>{
                     }
                     resolve(grayImageData);
                 }
+            }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                TimeCount = Date.now();
+                progress.innerHTML = "グレイスケール変換終了";
+                setTimeout(()=>{resolve(input);},500);
             }
         );}).then((imgdata)=>{return new Promise(                               // ! 画像表示
             (resolve,reject)=>{
@@ -153,7 +218,15 @@ window.addEventListener('load',()=>{
                                     );},
                                     condition   = () => {   return new Promise(
                                         (resolve,reject) => {
-                                            resolve(i<imgData.height);
+                                            if(CancelFlag===true)reject();
+                                            const tmp = Date.now();
+                                            if(tmp>TimeCount+500){
+                                                TimeCount = tmp;
+                                                progress.innerHTML = "横フーリエ変換 : " + (i/imgData.height*100).toFixed(2) + "%";
+                                                setTimeout(()=>{resolve(i<imgData.height);},0);
+                                            }else{
+                                                resolve(i<imgData.height);
+                                            }
                                         }
                                     );},
                                     callback    = () => {   return new Promise(
@@ -194,7 +267,20 @@ window.addEventListener('load',()=>{
                             )().then(() => {
                                 console.log("横フーリエ終了");
                                 resolve([realBuffer,imaginBuffer,imgData.width,imgData.height]);
+                            }).catch(()=>{
+                                progress.innerHTML="中止処理中";
+                                setTimeout(()=>{
+                                    closeModal.click();
+                                    CancelFlag = false;
+                                    EndFlag = false;
+                                },500);
                             });
+                        }
+                    );}).then((input)=>{return new Promise( // 表示
+                        (resolve,reject)=>{
+                            TimeCount = Date.now();
+                            progress.innerHTML = "横フーリエ変換終了";
+                            setTimeout(()=>{resolve(input);},500);
                         }
                     );}).then((buffset)=>{return new Promise(                       // ! 画像表示
                         (resolve,reject)=>{                                             // (入力:[実数部配列,虚数部配列,横幅,高さ] 出力:素通り)
@@ -281,29 +367,26 @@ window.addEventListener('load',()=>{
                                     );},
                                     condition   = () => {   return new Promise(
                                         (resolve,reject) => {
-                                            resolve(i<imgData.width);
+                                            if(CancelFlag===true)reject();
+                                            const tmp = Date.now();
+                                            if(tmp>TimeCount+500){
+                                                TimeCount = tmp;
+                                                progress.innerHTML = "縦フーリエ変換 : " + (i/imgData.width*100).toFixed(2) + "%";
+                                                setTimeout(()=>{resolve(i<imgData.width);},0);
+                                            }else{
+                                                resolve(i<imgData.width);
+                                            }
                                         }
                                     );},
                                     callback    = () => {   return new Promise(
                                         (resolve,reject) => {
                                             const coefficient = 2*Math.PI/imgData.height;
-                                            //const bufferStart = i;
                                             for(let j = 0,k = i;j<imgData.height;j++,k+=imgData.width){
                                                 for(let l = 0,m = i;l<imgData.height;l++,m+=imgData.width){
                                                     realBuffer[k]   += real[m]*Math.cos(coefficient*j*l)+imagin[m]*Math.sin(coefficient*j*l);
                                                     imaginBuffer[k] += imagin[m]*Math.cos(coefficient*j*l)-real[m]*Math.sin(coefficient*j*l);
                                                 }
                                             }
-                                            /*
-                                            const bufferStart  = i;
-                                            const coefficient  = 2*Math.PI*i/imgData.height;
-                                            for(let j = 0,k=bufferStart;j<imgData.height;j++,k+=imgData.width){ // jは列番号
-                                                for(let l=0,m=bufferStart*4;l<imgData.height;l++,m+=4){
-                                                    realBuffer[k]   += imgData.data[m]/256*Math.cos(coefficient*l);
-                                                    imaginBuffer[k] -= imgData.data[m]*Math.sin(coefficient*l);
-                                                }
-                                            }
-                                            */
                                             resolve();
                                         }
                                     );},
@@ -331,7 +414,20 @@ window.addEventListener('load',()=>{
                             )().then(() => {
                                 console.log("縦フーリエ終了");
                                 resolve([realBuffer,imaginBuffer,imgData.width,imgData.height]);
+                            }).catch(()=>{
+                                progress.innerHTML="中止処理中";
+                                setTimeout(()=>{
+                                    closeModal.click();
+                                    CancelFlag = false;
+                                    EndFlag = false;
+                                },500);
                             });
+                        }
+                    );}).then((input)=>{return new Promise( // 表示
+                        (resolve,reject)=>{
+                            TimeCount = Date.now();
+                            progress.innerHTML = "縦フーリエ変換終了";
+                            setTimeout(()=>{resolve(input);},500);
                         }
                     );}).then((buffset)=>{return new Promise(                       // ! 画像表示
                         (resolve,reject)=>{                                             // (入力:[実数部配列,虚数部配列,横幅,高さ] 出力:素通り)
@@ -404,6 +500,7 @@ window.addEventListener('load',()=>{
             }
         );}).then((bufferSet) => {   return new Promise(                        // 画像処理(パワースペクトル)
             (resolve,reject) => {
+                if(CancelFlag===true)reject();
                 const cvs = document.createElement("canvas");
                 const ctx = cvs.getContext("2d");
                 const powerImageData = ctx.createImageData(bufferSet[2],bufferSet[3]);
@@ -424,6 +521,12 @@ window.addEventListener('load',()=>{
                 }
                 resolve(powerImageData);
             }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                TimeCount = Date.now();
+                progress.innerHTML = "パワースペクトルの計算終了";
+                setTimeout(()=>{resolve(input);},500);
+            }
         );}).then((imgdata)=>{  return new Promise(                             // ! 画像表示
             (resolve,reject)=>{
                 const cvs = document.createElement("canvas");
@@ -443,6 +546,7 @@ window.addEventListener('load',()=>{
             }
         );}).then((originImageData) => {   return new Promise(                  // 画像処理(対角線交差)
             (resolve,reject) => {
+                if(CancelFlag===true)reject();
                 console.log("here processing");
                 console.log(originImageData);
                 const cvs = document.createElement("canvas");
@@ -517,6 +621,12 @@ window.addEventListener('load',()=>{
                 */
                 resolve(shiftImageData);
             }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                TimeCount = Date.now();
+                progress.innerHTML = "パワースペクトル画像の生成終了";
+                setTimeout(()=>{resolve(input);},500);
+            }
         );}).then((imgdata)=>{  return new Promise(                             // ! 画像表示
             (resolve,reject)=>{
                 const cvs = document.createElement("canvas");
@@ -536,18 +646,63 @@ window.addEventListener('load',()=>{
             }
         );}).then(                                                              // 終了宣言
             ()=>{
+                EndFlag = true;
+                progress.innerHTML = "終了";
+                cancel.classList.add("disabled");
+                setTimeout(()=>{
+                    closeModal.click();
+                    EndFlag=false;
+                    CancelFlag=false;
+                    cancel.classList.remove("disabled");
+                },500);
                 console.log("end");
                 //console.log("scope test");
                 //cosnole.log(i);
                 //console.log(max);
             }
-        ).catch();
+        ).catch(()=>{
+            progress.innerHTML="中止処理中";
+            setTimeout(()=>{
+                closeModal.click();
+                CancelFlag = false;
+                EndFlag = false;
+            },500);
+        });
     },false);
+    console.dir(input);
 
+    const inputButton = document.getElementById("inputButton");
     inputButton.addEventListener('click',()=>{
         console.log("inputButton clicked.");
         input.click();
     },false);
+    console.dir(inputButton);
+
+    const progress = document.getElementById("progress");
+    console.dir(progress);
+
+    const showModal = document.getElementById("showModal");
+    console.dir(showModal);
+
+    const closeModal = document.getElementById("closeModal");
+    console.dir(closeModal);
+
+    const cancel = document.getElementById("cancel");
+    cancel.addEventListener("click",()=>{CancelFlag=true;},false);
+    console.dir(cancel);
+
+    const close = document.getElementById("close");
+    close.addEventListener("click",()=>{
+        if(EndFlag === true){
+            closeModal.click();
+            EndFlag = false;
+            CancelFlag = false;
+        }else{
+            progress.innerHTML = "中止処理中";
+            cancel.click();
+        }
+    },false);
+    console.dir(cancel);
 
     console.log("init end.");
 

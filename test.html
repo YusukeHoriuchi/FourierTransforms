@@ -136,7 +136,8 @@ f(0,0) & f(1,0) & \cdots & f(M-1,0) \\
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <h2>出力</h2>
+              <h2 id="output"></h2>
+              <div id="test"></div>
               <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4" id="origin"></div>
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4" id="gray"></div>
@@ -154,6 +155,31 @@ f(0,0) & f(1,0) & \cdots & f(M-1,0) \\
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4" id="cross"></div>
               </div>
             </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <div class="modal" id="wait" tab-index="-1" role="dialog" data-backdrop="static">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button class="close" id="close" type="button"><span>&times;</span></button>
+                      <h4 class="modal-title text-center">処理中</h4>
+                    </div>
+                    <div class="modal-body">
+                      <div class="text-center" id="progress"></div>
+                      <button class="hidden" id="closeModal" data-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-footer">
+                      <button class="btn btn-danger" id="cancel" type="button">cancel</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <button class="hidden" id="showModal" data-toggle="modal" data-target="#wait"></button>
+            <input class="hidden" id="input" type="file" accept="image/*">
           </div>
         </div>
       </div>
