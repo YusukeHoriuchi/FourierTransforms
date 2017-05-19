@@ -19,14 +19,12 @@ html(lang="ja")
     div.container
       div.row
         div.col-xs-12.col-sm-12.col-md-12.col-lg-12
-          //-
+          //-- 説明
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
               div.page-header
                 h1 Fourier Transforms
               include:pre_katex:markdown-it:post_katex ../doc/dft.md
-
-
           //-- 入力
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
@@ -36,16 +34,22 @@ html(lang="ja")
                   div.panel.panel-dafault
                     div.panel-body
                       button.btn.btn-default#inputButton(type = "button") ファイルを選択
+          //-- 出力
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
-              h2 読み込んだファイル
+              h2 出力
               div.row
-                div.col-xs-12.col-sm-12.col-md-12.col-lg-12#outArea
-              h2 パワースペクトル画像
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#origin
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#gray
               div.row
-                div.col-xs-12.col-sm-12.col-md-12.col-lg-12
-
-
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#rowRe
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#rowIm
+              div.row
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#colRe
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#colIm
+              div.row
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#power
+                div.col-xs-12.col-sm-6.col-md-4.col-lg-4#cross
 
     footer.footer
       div.container

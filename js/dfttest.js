@@ -17,36 +17,25 @@
 
 再構成エリア作成
 
-
+知見　：
+　chromeはgetElementByIdしなくてもid指定でappendChild出来てしまう
 
 */
 
 
 window.addEventListener('load',()=>{
-
-    //--- debug
-    console.log("add event listener window onload");
-
+    console.log("window onload");
 
     const inputButton = document.getElementById("inputButton");
-    const outArea = document.getElementById("outArea");
-
 
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
 
-    // スコープを狭くする予定
-    const cvs = document.createElement("canvas");
-    const ctx = cvs.getContext("2d");
-
     //--- debug
     console.dir(inputButton);
-    console.dir(outArea);
-    //;console.dir(outImage);  // なぜか表示される
+    //console.dir(outArea);
     console.dir(input);
-
-    //outImage.innerHTML+= "unko";
 
     input.addEventListener("change",(evt)=>{                              // 入力が変更されたら
         console.log(evt);
@@ -75,71 +64,81 @@ window.addEventListener('load',()=>{
             (resolve,reject) => {
                 console.log("now reading data");
                 const img = new Image();
-                img.onload = function(){
-                    //console.dir(img);
+                img.onload = ()=>{
                     console.log("success load image. width : "+img.naturalWidth+", height : "+img.naturalHeight);
+                    const cvs = document.createElement("canvas");
                     cvs.width = img.naturalWidth;
                     cvs.height = img.naturalHeight;
-
-                    console.log("canvas set width : "+cvs.width+", height : "+cvs.height);
-                    ctx.drawImage(img,0,0,cvs.width,cvs.height); // キャンバスに画像を描画
-
-                    //とりあえずinputImage.classList.add("responsiveImg");              // 画像にクラスを指定
-
-                    //outArea.appendChild(img);                        // DOMに追加
-                    //outArea.innerHTML += "chinnko";
-
-                    //debug start
-                    const x = document.createElement("canvas");
-                    const y = ctx.getImageData(0,0,cvs.width,cvs.height);
-                    x.width = y.width;
-                    x.height = y.height;
-                    const z = x.getContext("2d");
-                    z.putImageData(y,0,0);
-                    outArea.appendChild(x);
-                    outArea.innerHTML+="unko";
-                    //debug end
-
+                    const ctx = cvs.getContext("2d");
+                    ctx.drawImage(img,0,0,cvs.width,cvs.height);
                     const originImageData = ctx.getImageData(0,0,cvs.width,cvs.height);
-                    setTimeout(()=>{resolve(originImageData)},0);
+                    resolve(originImageData);
                 };
-                img.onerror = function(){
+                img.onerror = ()=>{
                     reject("image load error");
                 };
                 img.src = data;
+            }
+        );}).then((imgdata)=>{return new Promise(                               // ! 画像表示
+            (resolve,reject)=>{
+                const cvs = document.createElement("canvas");
+                cvs.width = imgdata.width;
+                cvs.height = imgdata.height;
+                const ctx = cvs.getContext("2d");
+                ctx.putImageData(imgdata,0,0);
+                const img = new Image();
+                img.onload = ()=>{
+                    img.classList.add("responsiveImg");
+                    const origin = document.getElementById("origin");
+                    origin.innerHTML += "<h3>入力画像</h3>";
+                    origin.appendChild(img);
+                    setTimeout(()=>{resolve(imgdata);},50);
+                };
+                img.src = cvs.toDataURL("image/png");
             }
         );}).then((imgData) => {  return new Promise(                           // 画像処理(白黒化)
             (resolve,reject) => {
                 if(false){
                     resolve(imgData);                                           // カラーの場合そのまま流す
                 }else{
+                    const cvs = document.createElement("canvas");
+                    const ctx = cvs.getContext("2d");
                     const grayImageData = ctx.createImageData(imgData);
-                    for(let i=0,max=grayImageData.width*grayImageData.height*4;i<max;i+=4){
+                    for(let i=0;i<grayImageData.data.length;i+=4){
                         let tmp = imgData.data[i+0]*0.299 + imgData.data[i+1]*0.587 + imgData.data[i+2]*0.114;
                         grayImageData.data[i+0] = grayImageData.data[i+1] = grayImageData.data[i+2] = tmp;
                         grayImageData.data[i+3] = imgData.data[i+3];
                     }
-                    //debug start
-                    const tmpCvs    = document.createElement("canvas");
-                    tmpCvs.width    = grayImageData.width;
-                    tmpCvs.height   = grayImageData.height;
-                    const tmpCtx    = tmpCvs.getContext("2d");
-                    tmpCtx.putImageData(grayImageData,0,0);
-                    outArea.appendChild(tmpCvs);
-                    // debug end
                     resolve(grayImageData);
                 }
             }
-        );}).then((imgData) => {    return new Promise(                         // 画像処理(フーリエ変換)
+        );}).then((imgdata)=>{return new Promise(                               // ! 画像表示
             (resolve,reject)=>{
+                const cvs = document.createElement("canvas");
+                cvs.width = imgdata.width;
+                cvs.height = imgdata.height;
+                const ctx = cvs.getContext("2d");
+                ctx.putImageData(imgdata,0,0);
+                const img = new Image();
+                img.onload = ()=>{
+                    img.classList.add("responsiveImg");
+                    const gray = document.getElementById("gray");
+                    gray.innerHTML += "<h3>白黒化</h3>";
+                    gray.appendChild(img);
+                    setTimeout(()=>{resolve(imgdata);},50);
+                };
+                img.src = cvs.toDataURL("image/png");
+            }
+        );}).then((imgData) => {    return new Promise(                         // ! 画像処理(フーリエ変換)
+            (resolve,reject)=>{                                                     // (入力:ImageData 出力:[実数部配列,虚数部配列,横幅,高さ])
                 if(false){
                     resolve([imgData,imgData]);                                     // カラーの場合未実装
                 }else{
-                    Promise.resolve().then(() => {  return new Promise(                 // 横フーリエ 各行毎に処理を分割して返す。
+                    Promise.resolve().then(() => {  return new Promise(             // 横フーリエ 各行毎に処理を分割して返す。
                         (resolve,reject)=>{
                             let realBuffer   = new Float32Array(imgData.width*imgData.height);
                             let imaginBuffer = new Float32Array(imgData.width*imgData.height);
-                            for(let i,max=realBuffer.length;i<max;i++){
+                            for(let i=0;i<realBuffer.length;i++){
                                 realBuffer[i]   = 0;
                                 imaginBuffer[i] = 0;
                             }
@@ -162,9 +161,10 @@ window.addEventListener('load',()=>{
                                             const bufferStart  = i*imgData.width;
                                             const coefficient  = 2*Math.PI/imgData.width;
                                             for(let j = 0,k=bufferStart;j<imgData.width;j++,k++){ // jは列番号
+                                                const coef = coefficient*j;
                                                 for(let l=0,m=bufferStart*4;l<imgData.width;l++,m+=4){
-                                                    realBuffer[k]   += imgData.data[m]*Math.cos(coefficient*j*l);
-                                                    imaginBuffer[k] -= imgData.data[m]*Math.sin(coefficient*j*l);
+                                                    realBuffer[k]   += imgData.data[m]*Math.cos(coef*l);
+                                                    imaginBuffer[k] -= imgData.data[m]*Math.sin(coef*l);
                                                 }
                                             }
                                             resolve();
@@ -192,61 +192,75 @@ window.addEventListener('load',()=>{
                                     );
                                 }
                             )().then(() => {
-                                //console.log(realBuffer);
                                 console.log("横フーリエ終了");
-
-                                // debug start
-                                const temp = ctx.createImageData(imgData);
-                                    // 正規化用の最小値・最大値を求める
-                                let min = realBuffer[0];
-                                let max = realBuffer[0];
-                                for(let i=0;i<realBuffer.length;i++){
-                                    if(max<realBuffer[i])max=realBuffer[i];
-                                    if(min>realBuffer[i])min=realBuffer[i];
-                                }
-
-                                const range = max-min;
-                                for(let i=0,j=0,max=imgData.width*imgData.height*4;i<max;i+=4,j++){
-                                    temp.data[i+0] = temp.data[i+1] = temp.data[i+2] =  (realBuffer[j]-min)/range*256;
-                                    temp.data[i+3] = 255;
-                                }
-                                const tmpCvs    = document.createElement("canvas");
-                                tmpCvs.width    = imgData.width;
-                                tmpCvs.height   = imgData.height;
-                                const tmpCtx    = tmpCvs.getContext("2d");
-                                tmpCtx.putImageData(temp,0,0);
-                                outArea.appendChild(tmpCvs);
-                                console.log(temp.data);
-                                //debug end
-
-                                // debug start
-                                const temp2 = ctx.createImageData(imgData);
-                                    // 正規化用の最小値・最大値を求める
-                                let min2 = imaginBuffer[0];
-                                let max2 = imaginBuffer[0];
-                                for(let i=0;i<imaginBuffer.length;i++){
-                                    if(max2<imaginBuffer[i])max2=imaginBuffer[i];
-                                    if(min2>imaginBuffer[i])min2=imaginBuffer[i];
-                                }
-
-                                const range2 = max2-min2;
-                                for(let i=0,j=0,max=imgData.width*imgData.height*4;i<max;i+=4,j++){
-                                    temp2.data[i+0] = temp2.data[i+1] = temp2.data[i+2] =  (imaginBuffer[j]-min2)/range2*256;
-                                    temp2.data[i+3] = 255;
-                                }
-                                const tmpCvs2    = document.createElement("canvas");
-                                tmpCvs2.width    = imgData.width;
-                                tmpCvs2.height   = imgData.height;
-                                const tmpCtx2    = tmpCvs2.getContext("2d");
-                                tmpCtx2.putImageData(temp2,0,0);
-                                outArea.appendChild(tmpCvs2);
-                                console.log(temp2.data);
-                                //debug end
-                                console.log("横フーリエ画像描画終了");
-                                resolve([realBuffer,imaginBuffer]);
+                                resolve([realBuffer,imaginBuffer,imgData.width,imgData.height]);
                             });
                         }
-                    );}).then((bufferSet) => {   return new Promise(                             // 縦フーリエ
+                    );}).then((buffset)=>{return new Promise(                       // ! 画像表示
+                        (resolve,reject)=>{                                             // (入力:[実数部配列,虚数部配列,横幅,高さ] 出力:素通り)
+                            Promise.resolve().then(()=>{return new Promise(
+                                (resolve,reject)=>{
+                                    const cvs = document.createElement("canvas");
+                                    cvs.width = buffset[2];
+                                    cvs.height = buffset[3];
+                                    const ctx = cvs.getContext("2d");
+                                    const imgdata = ctx.createImageData(cvs.width,cvs.height);
+                                    let min = buffset[0][0];
+                                    let max = buffset[0][0];
+                                    for(let i=0;i<buffset[0].length;i++){
+                                        if(max<buffset[0][i])max=buffset[0][i];
+                                        if(min>buffset[0][i])min=buffset[0][i];
+                                    }
+                                    const range = max-min;
+                                    for(let i=0,j=0;i<imgdata.data.length;i+=4,j++){
+                                        imgdata.data[i+0] = imgdata.data[i+1] = imgdata.data[i+2] = Math.sqrt(Math.sqrt((buffset[0][j]-min)/range))*256;
+                                        imgdata.data[i+3] = 255;
+                                    }
+                                    ctx.putImageData(imgdata,0,0);
+                                    const img = new Image();
+                                    img.onload = ()=>{
+                                        img.classList.add("responsiveImg");
+                                        const rowRe = document.getElementById("rowRe");
+                                        rowRe.innerHTML += "<h3>横フーリエ変換実数部</h3>";
+                                        rowRe.appendChild(img);
+                                        setTimeout(()=>{resolve();},50);
+                                    };
+                                    img.src = cvs.toDataURL("image/png");
+                                }
+                            );}).then(()=>{return new Promise(
+                                (resolve,reject)=>{
+                                    const cvs = document.createElement("canvas");
+                                    cvs.width = buffset[2];
+                                    cvs.height = buffset[3];
+                                    const ctx = cvs.getContext("2d");
+                                    const imgdata = ctx.createImageData(cvs.width,cvs.height);
+                                    let min = buffset[1][0];
+                                    let max = buffset[1][0];
+                                    for(let i=0;i<buffset[1].length;i++){
+                                        if(max<buffset[1][i])max=buffset[1][i];
+                                        if(min>buffset[1][i])min=buffset[1][i];
+                                    }
+                                    const range = max-min;
+                                    for(let i=0,j=0;i<imgdata.data.length;i+=4,j++){
+                                        imgdata.data[i+0] = imgdata.data[i+1] = imgdata.data[i+2] = (buffset[1][j]-min)/range*256;
+                                        imgdata.data[i+3] = 255;
+                                    }
+                                    ctx.putImageData(imgdata,0,0);
+                                    const img = new Image();
+                                    img.onload = ()=>{
+                                        img.classList.add("responsiveImg");
+                                        const rowIm = document.getElementById("rowIm");
+                                        rowIm.innerHTML += "<h3>横フーリエ変換虚数部</h3>";
+                                        rowIm.appendChild(img);
+                                        setTimeout(()=>{resolve();},50);
+                                    };
+                                    img.src = cvs.toDataURL("image/png");
+                                }
+                            );}).then(()=>{
+                                resolve(buffset);
+                            });
+                        }
+                    );}).then((bufferSet) => {   return new Promise(                // 縦フーリエ
                         (resolve,reject) => {
                             const real   = bufferSet[0];
                             const imagin = bufferSet[1];
@@ -316,65 +330,82 @@ window.addEventListener('load',()=>{
                                 }
                             )().then(() => {
                                 console.log("縦フーリエ終了");
-
-                                // debug start
-                                const temp = ctx.createImageData(imgData);
-                                    // 正規化用の最小値・最大値を求める
-                                let min = realBuffer[0];
-                                let max = realBuffer[0];
-                                for(let i=0;i<realBuffer.length;i++){
-                                    if(max<realBuffer[i])max=realBuffer[i];
-                                    if(min>realBuffer[i])min=realBuffer[i];
-                                }
-
-                                const range = max-min;
-                                for(let i=0,j=0,max=imgData.width*imgData.height*4;i<max;i+=4,j++){
-                                    temp.data[i+0] = temp.data[i+1] = temp.data[i+2] =  (realBuffer[j]-min)/range*256;
-                                    temp.data[i+3] = 255;
-                                }
-                                const tmpCvs    = document.createElement("canvas");
-                                tmpCvs.width    = imgData.width;
-                                tmpCvs.height   = imgData.height;
-                                const tmpCtx    = tmpCvs.getContext("2d");
-                                tmpCtx.putImageData(temp,0,0);
-                                outArea.appendChild(tmpCvs);
-                                console.log(temp.data);
-                                //debug end
-
-                                // debug start
-                                const temp2 = ctx.createImageData(imgData);
-                                    // 正規化用の最小値・最大値を求める
-                                let min2 = imaginBuffer[0];
-                                let max2 = imaginBuffer[0];
-                                for(let i=0;i<imaginBuffer.length;i++){
-                                    if(max2<imaginBuffer[i])max2=imaginBuffer[i];
-                                    if(min2>imaginBuffer[i])min2=imaginBuffer[i];
-                                }
-
-                                const range2 = max2-min2;
-                                for(let i=0,j=0,max=imgData.width*imgData.height*4;i<max;i+=4,j++){
-                                    temp2.data[i+0] = temp2.data[i+1] = temp2.data[i+2] =  (imaginBuffer[j]-min2)/range2*256;
-                                    temp2.data[i+3] = 255;
-                                }
-                                const tmpCvs2    = document.createElement("canvas");
-                                tmpCvs2.width    = imgData.width;
-                                tmpCvs2.height   = imgData.height;
-                                const tmpCtx2    = tmpCvs2.getContext("2d");
-                                tmpCtx2.putImageData(temp2,0,0);
-                                outArea.appendChild(tmpCvs2);
-                                console.log(temp2.data);
-                                //debug end
-                                console.log("縦フーリエ画像描画終了");
                                 resolve([realBuffer,imaginBuffer,imgData.width,imgData.height]);
                             });
                         }
-                    );}).then((data) => {
+                    );}).then((buffset)=>{return new Promise(                       // ! 画像表示
+                        (resolve,reject)=>{                                             // (入力:[実数部配列,虚数部配列,横幅,高さ] 出力:素通り)
+                            Promise.resolve().then(()=>{return new Promise(
+                                (resolve,reject)=>{
+                                    const cvs = document.createElement("canvas");
+                                    cvs.width = buffset[2];
+                                    cvs.height = buffset[3];
+                                    const ctx = cvs.getContext("2d");
+                                    const imgdata = ctx.createImageData(cvs.width,cvs.height);
+                                    let min = buffset[0][0];
+                                    let max = buffset[0][0];
+                                    for(let i=0;i<buffset[0].length;i++){
+                                        if(max<buffset[0][i])max=buffset[0][i];
+                                        if(min>buffset[0][i])min=buffset[0][i];
+                                    }
+                                    const range = max-min;
+                                    for(let i=0,j=0;i<imgdata.data.length;i+=4,j++){
+                                        imgdata.data[i+0] = imgdata.data[i+1] = imgdata.data[i+2] = Math.sqrt(Math.sqrt((buffset[0][j]-min)/range))*256;
+                                        imgdata.data[i+3] = 255;
+                                    }
+                                    ctx.putImageData(imgdata,0,0);
+                                    const img = new Image();
+                                    img.onload = ()=>{
+                                        img.classList.add("responsiveImg");
+                                        const colRe = document.getElementById("colRe");
+                                        colRe.innerHTML += "<h3>縦フーリエ変換実数部</h3>";
+                                        colRe.appendChild(img);
+                                        setTimeout(()=>{resolve();},50);
+                                    };
+                                    img.src = cvs.toDataURL("image/png");
+                                }
+                            );}).then(()=>{return new Promise(
+                                (resolve,reject)=>{
+                                    const cvs = document.createElement("canvas");
+                                    cvs.width = buffset[2];
+                                    cvs.height = buffset[3];
+                                    const ctx = cvs.getContext("2d");
+                                    const imgdata = ctx.createImageData(cvs.width,cvs.height);
+                                    let min = buffset[1][0];
+                                    let max = buffset[1][0];
+                                    for(let i=0;i<buffset[1].length;i++){
+                                        if(max<buffset[1][i])max=buffset[1][i];
+                                        if(min>buffset[1][i])min=buffset[1][i];
+                                    }
+                                    const range = max-min;
+                                    for(let i=0,j=0;i<imgdata.data.length;i+=4,j++){
+                                        imgdata.data[i+0] = imgdata.data[i+1] = imgdata.data[i+2] = (buffset[1][j]-min)/range*256;
+                                        imgdata.data[i+3] = 255;
+                                    }
+                                    ctx.putImageData(imgdata,0,0);
+                                    const img = new Image();
+                                    img.onload = ()=>{
+                                        img.classList.add("responsiveImg");
+                                        const colIm = document.getElementById("colIm");
+                                        colIm.innerHTML += "<h3>縦フーリエ変換虚数部</h3>";
+                                        colIm.appendChild(img);
+                                        setTimeout(()=>{resolve();},50);
+                                    };
+                                    img.src = cvs.toDataURL("image/png");
+                                }
+                            );}).then(()=>{
+                                resolve(buffset);
+                            });
+                        }
+                    );}).then((data) => {                                           // 終了
                         resolve(data);
                     });
                 }
             }
         );}).then((bufferSet) => {   return new Promise(                        // 画像処理(パワースペクトル)
             (resolve,reject) => {
+                const cvs = document.createElement("canvas");
+                const ctx = cvs.getContext("2d");
                 const powerImageData = ctx.createImageData(bufferSet[2],bufferSet[3]);
                 const buffer = new Float32Array(bufferSet[0].length);
                 for(let i=0;i<bufferSet[0].length;i++){
@@ -391,36 +422,33 @@ window.addEventListener('load',()=>{
                     powerImageData.data[j+0] = powerImageData.data[j+1] = powerImageData.data[j+2] = Math.sqrt((buffer[i]-min)/range*256*256)*30;
                     powerImageData.data[j+3] = 255;
                 }
-                /*
-                const realImgData   = imgSet[0];
-                const imaginImgData = imgSet[1];
-                console.log(realImgData);
-                console.log(imaginImgData);
-                const powerImageData    = ctx.createImageData(realImgData);
-                const coefficient       = 1 / Math.sqrt(2);
-                for(let i=0,max=realImgData.width*realImgData.height*4;i<max;i+=4){
-                    powerImageData.data[i+0] = Math.sqrt(realImgData.data[i+0]*realImgData.data[i+0]+imaginImgData.data[i+0]*imaginImgData.data[i+0])*coefficient;
-                    powerImageData.data[i+1] = Math.sqrt(realImgData.data[i+1]*realImgData.data[i+1]+imaginImgData.data[i+1]*imaginImgData.data[i+1])*coefficient;
-                    powerImageData.data[i+2] = Math.sqrt(realImgData.data[i+2]*realImgData.data[i+2]+imaginImgData.data[i+2]*imaginImgData.data[i+2])*coefficient;
-                    powerImageData.data[i+3] = 255;
-                }
-                console.log(powerImageData);
-                */
-                // debug start
-                const tmpCvs    = document.createElement("canvas");
-                tmpCvs.width    = powerImageData.width;
-                tmpCvs.height   = powerImageData.height;
-                const tmpCtx    = tmpCvs.getContext("2d");
-                tmpCtx.putImageData(powerImageData,0,0);
-                outArea.appendChild(tmpCvs);
-                console.log(powerImageData);
-                // debug end
                 resolve(powerImageData);
+            }
+        );}).then((imgdata)=>{  return new Promise(                             // ! 画像表示
+            (resolve,reject)=>{
+                const cvs = document.createElement("canvas");
+                cvs.width = imgdata.width;
+                cvs.height = imgdata.height;
+                const ctx = cvs.getContext("2d");
+                ctx.putImageData(imgdata,0,0);
+                const img = new Image();
+                img.onload = ()=>{
+                    img.classList.add("responsiveImg");
+                    const power = document.getElementById("power");
+                    power.innerHTML += "<h3>絶対値</h3>";
+                    power.appendChild(img);
+                    setTimeout(()=>{resolve(imgdata);},50);
+                };
+                img.src = cvs.toDataURL("image/png");
             }
         );}).then((originImageData) => {   return new Promise(                  // 画像処理(対角線交差)
             (resolve,reject) => {
                 console.log("here processing");
                 console.log(originImageData);
+                const cvs = document.createElement("canvas");
+                cvs.width = originImageData.width;
+                cvs.height = originImageData.height;
+                const ctx = cvs.getContext("2d");
                 const shiftImageData  = ctx.createImageData(originImageData);
 
                 const sW        = originImageData.width % 2 * 4;
@@ -481,11 +509,30 @@ window.addEventListener('load',()=>{
                     shiftImageData.data[halfPixel+halfWidth+2] = originImageData.data[halfPixel+halfPixel+halfWidth+halfWidth+2];
                     shiftImageData.data[halfPixel+halfWidth+3] = originImageData.data[halfPixel+halfPixel+halfWidth+halfWidth+3];
                 }
+                /*
                 //--debug start
                 ctx.putImageData(shiftImageData,0,0);
                 outArea.appendChild(cvs);
                 //--debug end
+                */
                 resolve(shiftImageData);
+            }
+        );}).then((imgdata)=>{  return new Promise(                             // ! 画像表示
+            (resolve,reject)=>{
+                const cvs = document.createElement("canvas");
+                cvs.width = imgdata.width;
+                cvs.height = imgdata.height;
+                const ctx = cvs.getContext("2d");
+                ctx.putImageData(imgdata,0,0);
+                const img = new Image();
+                img.onload = ()=>{
+                    img.classList.add("responsiveImg");
+                    const cross = document.getElementById("cross");
+                    cross.innerHTML += "<h3>パワースペクトル画像</h3>";
+                    cross.appendChild(img);
+                    setTimeout(()=>{resolve(imgdata);},50);
+                };
+                img.src = cvs.toDataURL("image/png");
             }
         );}).then(                                                              // 終了宣言
             ()=>{
