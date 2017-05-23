@@ -1,56 +1,8 @@
-/*
-
-ボタン押す
-画像ファイル入力
-モーダル作成
-画像ファイル読み取り
-画像読み取り
-キャンバス描画
-ピクセル値読み取り
-対角線交換
-横方向フーリエ変換re,im
-立て方向フーリエ変換re,im
-フーリエ変換描画
-パワースペクトル作成
-パワースペクトル描画
-モーダル消去
-
-
-開始
-  モーダル表示
-  {
-  progress更新
-  CancelFlag == true
-    -> progress : 中止処理中
-    -> CancelFlag : false
-    -> モーダル非表示
-  }
-  close == true
-    -> progress : 中止処理中
-    -> CancelFlag : true
-  終了
-    -> EndFlag : true
-    -> progress : 終了
-    -> cancel : 非表示
-    -> 1秒後 : モーダル非表示
-    close == true
-
-
-
-再構成エリア作成
-
-知見　：
-　chromeはgetElementByIdしなくてもid指定でappendChild出来てしまう
-
-*/
-
-
 window.addEventListener('load',()=>{
     console.log("window onload");
 
     let CancelFlag = false;
     let EndFlag = false;
-    let TimeCount;
 
     const input = document.getElementById("input");
     input.addEventListener("change",(evt)=>{                              // 入力が変更されたら
@@ -62,7 +14,7 @@ window.addEventListener('load',()=>{
             return;
         }
 
-        (()=>{
+        (()=>{                                                                  // 出力場所の初期化
             const output = document.getElementById("output");
             output.innerHTML = "出力";
             const origin = document.getElementById("origin");
@@ -88,7 +40,6 @@ window.addEventListener('load',()=>{
         ).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
                 showModal.click();
-                TimeCount = Date.now();
                 progress.innerHTML = "ファイルが入力されました";
                 setTimeout(()=>{resolve(input);},500);
             }
@@ -107,7 +58,6 @@ window.addEventListener('load',()=>{
             }
         );}).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
-                TimeCount = Date.now();
                 progress.innerHTML = "ファイルの読み込みに成功";
                 setTimeout(()=>{resolve(input);},500);
             }
@@ -133,7 +83,6 @@ window.addEventListener('load',()=>{
             }
         );}).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
-                TimeCount = Date.now();
                 progress.innerHTML = "画像の読み込みに成功";
                 setTimeout(()=>{resolve(input);},500);
             }
@@ -173,7 +122,6 @@ window.addEventListener('load',()=>{
             }
         );}).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
-                TimeCount = Date.now();
                 progress.innerHTML = "グレイスケール変換終了";
                 setTimeout(()=>{resolve(input);},500);
             }
@@ -207,6 +155,7 @@ window.addEventListener('load',()=>{
                                 realBuffer[i]   = 0;
                                 imaginBuffer[i] = 0;
                             }
+                            let TimeCount = Date.now();
                             let i; // iは行番号
                             (
                                 (
@@ -278,7 +227,6 @@ window.addEventListener('load',()=>{
                         }
                     );}).then((input)=>{return new Promise( // 表示
                         (resolve,reject)=>{
-                            TimeCount = Date.now();
                             progress.innerHTML = "横フーリエ変換終了";
                             setTimeout(()=>{resolve(input);},500);
                         }
@@ -356,6 +304,7 @@ window.addEventListener('load',()=>{
                                 realBuffer[i]   = 0;
                                 imaginBuffer[i] = 0;
                             }
+                            let TimeCount = Date.now();
                             let i; // iは行番号
                             (
                                 (
@@ -425,7 +374,6 @@ window.addEventListener('load',()=>{
                         }
                     );}).then((input)=>{return new Promise( // 表示
                         (resolve,reject)=>{
-                            TimeCount = Date.now();
                             progress.innerHTML = "縦フーリエ変換終了";
                             setTimeout(()=>{resolve(input);},500);
                         }
@@ -498,6 +446,10 @@ window.addEventListener('load',()=>{
                     });
                 }
             }
+        );}).then((buffset)=>{return new Promise(                               // フーリエ変換の生データを画像化する
+            (resolve,reject)=>{
+                resolve(buffset);
+            }
         );}).then((bufferSet) => {   return new Promise(                        // 画像処理(パワースペクトル)
             (resolve,reject) => {
                 if(CancelFlag===true)reject();
@@ -523,7 +475,6 @@ window.addEventListener('load',()=>{
             }
         );}).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
-                TimeCount = Date.now();
                 progress.innerHTML = "パワースペクトルの計算終了";
                 setTimeout(()=>{resolve(input);},500);
             }
@@ -623,7 +574,6 @@ window.addEventListener('load',()=>{
             }
         );}).then((input)=>{return new Promise( // 表示
             (resolve,reject)=>{
-                TimeCount = Date.now();
                 progress.innerHTML = "パワースペクトル画像の生成終了";
                 setTimeout(()=>{resolve(input);},500);
             }

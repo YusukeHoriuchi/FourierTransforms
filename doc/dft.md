@@ -1,99 +1,34 @@
 # DFT(Discrete Fourier Transform)
 
-連続の二次元フーリエ変換は \(F(u,v)=\displaystyle{\int_{-\infty}^{\infty}\int_{-\infty}^{\infty}{f(x,y)e^{-j2\pi(ux+vy)}dxdy}}\) と定義されている。
-離散では \(F(u,v)=\displaystyle{\sum_{x=0}^{M-1} \sum_{y=0}^{N-1} {f(x,y) \exp\left(-j 2\pi\left(\frac{ux}{M}+\frac{vy}{N}\right)\right)}}\) という式になる。
-画像の横幅が \(M\) 、縦が \(N\) の画像である。行列で表すと \(N\times M\) 行列となる。
+画像の横幅が \(M\) 、縦が \(N\) としたとき、二次元離散フーリエ変換は \(F(u,v)=\displaystyle{\sum_{x=0}^{M-1} \sum_{y=0}^{N-1} {f(x,y) \exp\left(-j 2\pi\left(\frac{ux}{M}+\frac{vy}{N}\right)\right)}}\) と定義されている。  
+
 この式を変形すると、
 
 \[
 \begin{eqnarray*}
     F(u,v)
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) \exp\left(-j \frac{2\pi}{N} (ux+vy)\right)}
-            }\\
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} (ux+vy)}}
-            }\\
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux} e^{-j \frac{2\pi}{N} vy}}
-            }\\
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{y=0}^{N-1} e^{-j \frac{2\pi}{N} vy} \sum_{x=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux}}
-            }\\
-        \Biggl( &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{x=0}^{N-1} e^{-j \frac{2\pi}{N} ux} \sum_{y=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} vy}}
-            } \Biggr)
-\end{eqnarray*}
-\]
-
-このようになる。
-したがって、各行毎にフーリエ変換して、各列毎にフーリエ変換をするという手順によって二次元フーリエ変換を実装することができる。
-
-\[
-\begin{eqnarray*}
-    F(u,v)
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{y=0}^{N-1} e^{-j \frac{2\pi}{N} vy} \sum_{x=0}^{N-1} {f(x,y) e^{-j \frac{2\pi}{N} ux}}
-            } \\
-        &=& \frac{1}{N}
-            \displaystyle{
-                \sum_{y=0}^{N-1} \left(
-                    \cos\left(\frac{2\pi}{N}yv\right)-j\sin\left(\frac{2\pi}{N}yv\right)
-                \right)
-                \sum_{x=0}^{N-1} f(x,y) \left(
-                    \cos\left(\frac{2\pi}{N}xu\right)-j\sin\left(\frac{2\pi}{N}xu\right)
-                \right)
-            }
-\end{eqnarray*}
-\]
-
-x->,M  
-y  
-|  
-v  
-,  
-N
-
-
-\[
-\begin{eqnarray*}
-    G(a,b)
         &=& \displaystyle{
-                \sum_{x=0}^{N-1} f(x,b) \left(
-                    \cos\left(\frac{2\pi}{N}xa\right)-j\sin\left(\frac{2\pi}{N}xa\right)
-                \right)
-            }
-\end{eqnarray*}
-\]
-
-\[
-\begin{eqnarray*}
-    F(u,v)
+                \sum_{x=0}^{M-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j 2\pi \left(\frac{ux}{M}+\frac{vy}{N}\right)}}
+            }\\
         &=& \displaystyle{
-                \sum_{b=0}^{N-1} G(u,b) \left(
-                    \cos\left(\frac{2\pi}{N}xa\right)-j\sin\left(\frac{2\pi}{N}xa\right)
-                \right)
+                \sum_{x=0}^{M-1} \sum_{y=0}^{N-1} {f(x,y) e^{-j 2\pi \frac{ux}{M} } e^{-j 2\pi \frac{vy}{N}}}
+            }\\
+        &=& \displaystyle{
+                \sum_{y=0}^{N-1} e^{-j 2\pi\frac{vy}{N}} \sum_{x=0}^{M-1} {f(x,y) e^{-j 2\pi\frac{ux}{M}}}
             }
 \end{eqnarray*}
 \]
 
+となる。
+したがって、各行毎に一次元離散フーリエ変換をして、各列毎に一次元離散フーリエ変換をするという手順によって二次元離散フーリエ変換を実装することができる。
 
-## 2次元離散フーリエ変換
 
-画像を行列によって以下のように定義する。
+## 計算時間の目安
 
-\[
-    \mathbb{F} =
-    \begin{pmatrix}
-        f(0,0) & f(1,0) & \cdots & f(M-1,0) \\
-        f(0,1) & f(1,1) & \cdots & f(M-1,1) \\
-        \vdots & \vdots & \ddots & \vdots \\
-        f(0,N-1) & f(1,N-1) & \cdots & f(M-1,N-1)
-    \end{pmatrix}
-\]
+このプログラムは高速フーリエ変換ではないので
+計算量は \(O(n^2)\) となる。  
+2.9GHz intel core i5-6267U,  
+macOS Sierra 10.12.5,  
+Google Chrome 58.0.3029.110 (64-bit)  
+で実行すると、 \(512\times512\) ピクセルの画像で80秒程度、
+ \(3840\times2160\) ピクセルの画像で4.5時間程度処理に時間がかかった。

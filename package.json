@@ -1,0 +1,27 @@
+{
+  "name": "fourier-transforms",
+  "version": "1.0.0",
+  "description": "This repository show some programs of Fourier Transform.",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "pug -o . -O filter/filter.js --pretty pug/test.pug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YusukeHoriuchi/FourierTransforms.git"
+  },
+  "author": "YusukeHoriuchi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YusukeHoriuchi/FourierTransforms/issues"
+  },
+  "homepage": "https://github.com/YusukeHoriuchi/FourierTransforms#readme",
+  "dependencies": {
+    "jstransformer-markdown-it": "^2.0.0",
+    "pug-cli": "^1.0.0-alpha6"
+  }
+}
