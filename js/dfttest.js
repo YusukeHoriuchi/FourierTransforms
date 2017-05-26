@@ -33,6 +33,8 @@ window.addEventListener('load',()=>{
             power.innerHTML = "";
             const cross  = document.getElementById("cross");
             cross.innerHTML = "";
+            const download = document.getElementById("download");
+            download.innerHTML = "";
         })();
 
         Promise.resolve(
@@ -448,7 +450,74 @@ window.addEventListener('load',()=>{
             }
         );}).then((buffset)=>{return new Promise(                               // フーリエ変換の生データを画像化する
             (resolve,reject)=>{
+
+                const realArray   = new Uint8ClampedArray(buffset[0].buffer);
+                const imaginArray = new Uint8ClampedArray(buffset[1].buffer);
+
+                const cvs = document.createElement("canvas");
+                cvs.width = buffset[2];
+                cvs.height = buffset[3];
+                const ctx = cvs.getContext("2d");
+
+                const realid   = ctx.createImageData(buffset[2],buffset[3]);
+                const imaginid = ctx.createImageData(buffset[2],buffset[3]);
+                for(let i = 0;i<realid.data.length;i++){
+                    realid.data[i]   = realArray[i];
+                    imaginid.data[i] = imaginArray[i];
+                }
+
+                const str = Date.now();
+                console.log(str);
+
+                // 実数領域の画像化、バイナリファイル化、URL化
+                ctx.putImageData(realid,0,0);
+                let base64 = cvs.toDataURL("image/png");
+                let binary = atob(base64.replace(/^.*,/,''));
+                let array  = new Uint8Array(binary.length);
+                for(let i=0;i<binary.length;i++){array[i]=binary.charCodeAt(i);}
+                let blob = new Blob([array.buffer],{type: "image/png"});
+                let tmpURL = window.URL.createObjectURL(blob);
+                const realA = document.getElementById("realrawdata");
+                realA.download = "re_"+str+".png";
+                realA.href = tmpURL;
+
+                // 虚数領域の画像化、バイナリファイル化、URL化
+                ctx.putImageData(imaginid,0,0);
+                base64 = cvs.toDataURL("image/png");
+                binary = atob(base64.replace(/^.*,/,''));
+                array  = new Uint8Array(binary.length);
+                for(let i=0;i<binary.length;i++){array[i]=binary.charCodeAt(i);}
+                blob = new Blob([array.buffer],{type: "image/png"});
+                tmpURL = window.URL.createObjectURL(blob);
+                const imaginA = document.getElementById("imaginrawdata");
+                imaginA.download = "im_"+str+".png";
+                imaginA.href = tmpURL;
+
+                // ボタンの追加
+                const download = document.getElementById("download");
+                download.innerHTML += "<h3>フーリエ変換計算データ</h3>";
+                const button   = document.createElement("button");
+                button.classList.add("btn","btn-primary");
+                button.innerHTML = "計算データのダウンロード";
+                button.type = "button";
+                button.addEventListener("click",()=>{
+                    realA.click();
+                    imaginA.click();
+                },false);
+                download.appendChild(button);
+
+                download.innerHTML += "<br><p>単精度浮動小数点で計算したフーリエ変換後の値を画像ファイルに格納したものをダウンロードします。<br>";
+                download.innerHTML += "逆フーリエ変換プログラムで使用できます。(ファイル名は変更しないでください。)<br>";
+                download.innerHTML += "詳細はこちら=> <a href=\"#\">逆フーリエ変換</a></p>";
+
+
                 resolve(buffset);
+
+            }
+        );}).then((input)=>{return new Promise( // 表示
+            (resolve,reject)=>{
+                progress.innerHTML = "バッファの書き出し終了";
+                setTimeout(()=>{resolve(input);},500);
             }
         );}).then((bufferSet) => {   return new Promise(                        // 画像処理(パワースペクトル)
             (resolve,reject) => {
@@ -610,8 +679,9 @@ window.addEventListener('load',()=>{
                 //cosnole.log(i);
                 //console.log(max);
             }
-        ).catch(()=>{
+        ).catch((e)=>{
             progress.innerHTML="中止処理中";
+            console.log(e);
             setTimeout(()=>{
                 closeModal.click();
                 CancelFlag = false;

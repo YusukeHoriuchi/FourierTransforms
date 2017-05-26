@@ -48,7 +48,7 @@ html(lang="ja")
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
               h2#output
-              div#test
+              //-div#test
               div.row
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#origin
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#gray
@@ -61,6 +61,8 @@ html(lang="ja")
               div.row
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#power
                 div.col-xs-12.col-sm-6.col-md-4.col-lg-4#cross
+              div.row
+                div.col-xs-12.col-sm-12.col-md-12.col-lg-12.text-center#download
           //-- モーダルウィンドウ
           div.row
             div.col-xs-12.col-sm-12.col-md-12.col-lg-12
@@ -88,6 +90,8 @@ html(lang="ja")
                                     data-target="#wait")
             input.hidden#input( type="file"
                                 accept="image/*")
+            a.hidden#realrawdata
+            a.hidden#imaginrawdata
 
     footer.footer
       div.container
